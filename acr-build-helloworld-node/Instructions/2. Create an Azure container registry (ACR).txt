@@ -1,0 +1,100 @@
+1. Create resource grooup for the ACR
+
+az group create --name acr-demo-rg --location uksouth
+
+you should see the below Json
+
+{
+  "id": "/subscriptions/........./resourceGroups/acr-demo-rg",
+  "location": "uksouth",
+  "managedBy": null,
+  "name": "acr-demo-rg",
+  "properties": {
+    "provisioningState": "Succeeded"
+  },
+  "tags": null,
+  "type": "Microsoft.Resources/resourceGroups"
+}
+
+You can validate it's been created with 
+
+az group list -o table
+
+C:\Working\...>az group list -o table
+Name                         Location     Status
+---------------------------  -----------  ---------
+acr-demo-rg                  uksouth      Succeeded
+
+
+2. Create ACR in the res grp we've just created. Not the name of the acr must be unique.
+
+az acr create --resource-group acr-demo-rg --name acrdemoijs --sku Basic
+
+validate with
+
+NAME        RESOURCE GROUP    LOCATION    SKU    LOGIN SERVER           CREATION DATE         ADMIN ENABLED
+----------  ----------------  ----------  -----  ---------------------  --------------------  ---------------
+acrdemoijs  acr-demo-rg       uksouth     Basic  acrdemoijs.azurecr.io  2020-06-10T09:08:36Z  False
+
+3. Now log into acr, you'll be prompted for you logon details.
+
+az acr login --name acrdemoijs
+
+You should see ..
+
+Login Succeeded
+
+4. Get the login server name, need this for later commands
+
+az acr show --name acrdemoijs --query loginServer --output table
+
+Result
+---------------------
+acrdemoijs.azurecr.io
+
+5. Show docker images, the one we're interested in is aci-tutorial-app
+
+docker images 
+
+C:\Working\...>docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+aci-tutorial-app    latest              bb65ee7d0981        11 minutes ago      68.5MB
+node                9-alpine            a56170f59699        23 months ago       68.5MB
+
+6. Tag the dcoker image witht the loginServer\image\version
+
+docker tag aci-tutorial-app acrdemoijs.azurecr.io/aci-tutorial-app:v1
+
+Result, a new image is created called 'acrdemoijs.azurecr.io/aci-tutorial-app'
+
+C:\Working\...>docker images
+REPOSITORY                               TAG                 IMAGE ID            CREATED             SIZE
+acrdemoijs.azurecr.io/aci-tutorial-app   v1                  bb65ee7d0981        13 minutes ago      68.5MB
+aci-tutorial-app                         latest              bb65ee7d0981        13 minutes ago      68.5MB
+node                                     9-alpine            a56170f59699        23 months ago       68.5MB
+
+7. Push image from local to Azure ACR
+
+docker push acrdemoijs.azurecr.io/aci-tutorial-app:v1
+
+result,
+
+C:\Working\...>docker push acrdemoijs.azurecr.io/aci-tutorial-app:v1
+The push refers to repository [acrdemoijs.azurecr.io/aci-tutorial-app]
+36cb2b863647: Pushed
+3dca1512ee2d: Pushed
+172ed8ca5e43: Pushed
+8c9992f4e5dd: Pushed
+8dfad2055603: Pushed
+v1: digest: sha256:529ed3d75c2473e35f5737698cdb1582f0da31dad1ca3f9d588976fbbfacd6cc size: 1366
+
+If you now look on the Azure portal, the repository now contains the image.
+
+
+8. We can now see the image version in the repository using the below command 
+
+az acr repository show-tags --name acrdemoijs --repository aci-tutorial-app --output table
+
+Result
+--------
+v1

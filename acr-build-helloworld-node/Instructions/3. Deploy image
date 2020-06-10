@@ -1,0 +1,43 @@
+res-grp     = acr-demo-rg
+acr         = acrdemoijs
+acr-repo    = aci-tutorial-app
+localServer = acrdemoijs.azurecr.io 
+
+1. Create and azure container 
+
+az container create --resource-group acr-demo-rg --name aci-tutorial-app --image acrdemoijs.azurecr.io/aci-tutorial-app:v1
+ --cpu 1 --memory 1 
+ --registry-login-server acrdemoijs.azurecr.io
+ --registry-username <service-principal-ID> --registry-password <service-principal-password> 
+ --dns-name-label acr-demo-ijs --ports 80
+
+ Both <service-principal-ID> & <service-principal-password>  can be found by running
+
+* update to admin enabled 
+
+az acr update -n acrdemoijs --admin-enabled true
+
+* then 
+
+az acr credential show -n acrdemoijs -o table
+
+USERNAME    PASSWORD                          PASSWORD2
+----------  --------------------------------  --------------------------------
+acrdemoijs  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+the 
+<service-principal-ID> = acrdemoijs
+<service-principal-password> = ENTER the PASSWORD
+
+2. Check the status of the deployment with 
+
+az container show --resource-group acr-demo-rg --name aci-tutorial-app --query ipAddress.fqdn
+
+"acr-demo-ijs.uksouth.azurecontainer.io"
+
+if you brpwse top http://acr-demo-ijs.uksouth.azurecontainer.io/
+
+you'll see 
+
+Hello World
+Version: 9.11.2
