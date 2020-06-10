@@ -1,1 +1,1 @@
-"# az-cli-acr-example" 
+See README.md in folder.
